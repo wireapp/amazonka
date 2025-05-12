@@ -8,11 +8,11 @@
       url = "github:numtide/flake-utils";
     };
 
-    pre-commit-hooks = {
-      url = "github:cachix/pre-commit-hooks.nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.flake-utils.follows = "flake-utils";
-    };
+    #    pre-commit-hooks = {
+    #      url = "github:cachix/pre-commit-hooks.nix";
+    #      inputs.nixpkgs.follows = "nixpkgs";
+    #      inputs.flake-utils.follows = "flake-utils";
+    #    };
 
     botocore = {
       # Lock botocore until we fix https://github.com/issue/888
@@ -21,24 +21,24 @@
     };
   };
 
-  outputs = { self, nixpkgs, flake-utils, pre-commit-hooks, botocore }:
+  outputs = { self, nixpkgs, flake-utils, botocore }:
     flake-utils.lib.eachDefaultSystem (system:
       let
 
-        pre-commit = pre-commit-hooks.lib.${system}.run {
-          src = self;
-          hooks = {
-            cabal-fmt.enable = true;
-            nixpkgs-fmt.enable = true;
-            ormolu.enable = true;
-            shellcheck.enable = true;
-            shfmt.enable = true;
-            prettier = {
-              enable = true;
-              files = "\\.json$";
-            };
-          };
-        };
+        #  pre-commit = pre-commit-hooks.lib.${system}.run {
+        #    src = self;
+        #    hooks = {
+        #      cabal-fmt.enable = true;
+        #      nixpkgs-fmt.enable = true;
+        #      ormolu.enable = true;
+        #      shellcheck.enable = true;
+        #      shfmt.enable = true;
+        #      prettier = {
+        #        enable = true;
+        #        files = "\\.json$";
+        #      };
+        #    };
+        #  };
 
         pkgs = import nixpkgs {
           inherit system;
@@ -46,14 +46,15 @@
         };
 
         # The ghc compiler version patch level will be the latest that is available in nixpkgs.
-        ghc810 = pkgs.haskell.packages."ghc810";
-        ghc90 = pkgs.haskell.packages."ghc90";
-        ghc92 = pkgs.haskell.packages."ghc92";
-        ghc94 = pkgs.haskell.packages."ghc94";
+        #        ghc810 = pkgs.haskell.packages."ghc810";
+        #        ghc90 = pkgs.haskell.packages."ghc90";
+        #        ghc92 = pkgs.haskell.packages."ghc92";
+        #        ghc94 = pkgs.haskell.packages."ghc94";
         ghc96 = pkgs.haskell.packages."ghc96";
+        ghc98 = pkgs.haskell.packages."ghc98";
 
         # The default ghc to use when entering `nix develop`.
-        ghcDefault = ghc94;
+        ghcDefault = ghc98;
 
         renameVersion = version: "ghc" + (pkgs.lib.replaceStrings [ "." ] [ "" ] version);
 
@@ -85,18 +86,19 @@
             #
             # When this assertion fails, check if pkgs.ormolu is newer
             # than 0.7.0.0 and see if we can switch back to it.
-            (
-              assert (pkgs.ormolu.version == "0.5.0.1");
-              pkgs.haskell.packages.ghc96.ormolu_0_7_0_0
-            )
+            # (
+            #   assert (pkgs.ormolu.version == "0.5.0.1");
+            #   pkgs.haskell.packages.ghc96.ormolu_0_7_0_0
+            # )
 
             pkgs.parallel
+            pkgs.zlib.dev
           ];
 
-          shellHook = pre-commit.shellHook + ''
-            export BOTOCORE=${botocore.outPath}
-            echo "botocore: $BOTOCORE"
-          '';
+          # shellHook = pre-commit.shellHook + ''
+          #   export BOTOCORE=${botocore.outPath}
+          #   echo "botocore: $BOTOCORE"
+          # '';
         };
 
         amazonka-gen =
@@ -109,7 +111,7 @@
           # causing the contents of `HashMap`s to be traversed in a
           # slightly different order. This matters when `Ptr`s are
           # used to resolve recursive shape references.
-          ghc92.developPackage {
+          ghc98.developPackage {
             root = ./gen;
             overrides = _hsFinal: hsPrev: with pkgs.haskell.lib; {
               ede = dontCheck (dontHaddock hsPrev.ede);
@@ -133,20 +135,21 @@
           };
         };
 
-        checks = {
-          inherit pre-commit;
-        };
+        # checks = {
+        #   inherit pre-commit;
+        # };
 
         packages = {
           default = amazonka-gen;
         };
 
         devShells = {
-          ghc810 = mkDevShell ghc810;
-          ghc90 = mkDevShell ghc90;
-          ghc92 = mkDevShell ghc92;
-          ghc94 = mkDevShell ghc94;
+          # ghc810 = mkDevShell ghc810;
+          # ghc90 = mkDevShell ghc90;
+          # ghc92 = mkDevShell ghc92;
+          # ghc94 = mkDevShell ghc94;
           ghc96 = mkDevShell ghc96;
+          ghc98 = mkDevShell ghc98;
           default = mkDevShell ghcDefault;
         };
       });
