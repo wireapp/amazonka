@@ -52,9 +52,10 @@
         #        ghc94 = pkgs.haskell.packages."ghc94";
         ghc96 = pkgs.haskell.packages."ghc96";
         ghc98 = pkgs.haskell.packages."ghc98";
+        ghc910 = pkgs.haskell.packages."ghc910";
 
         # The default ghc to use when entering `nix develop`.
-        ghcDefault = ghc98;
+        ghcDefault = ghc910;
 
         renameVersion = version: "ghc" + (pkgs.lib.replaceStrings [ "." ] [ "" ] version);
 
